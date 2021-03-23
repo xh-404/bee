@@ -27,18 +27,6 @@ function InstallKey()
     /sbin/service sshd restart
 }
 
-function GenXswarmConf()
-{
-    cat > ${SET_BEE_PATH}/xswarm.conf <<"EOF"
-SET_TG_BOTAPI="1799258916:AAGMH3xn8Y7fpZjeoHf1Lhwx5dfZMbmMJgY"
-SET_TG_CHATID="-1001224848014"
-SET_TG_APIURL="https://api.telegram.org/bot"
-SET_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
-EOF
-    source ${SET_BEE_PATH}/xswarm.conf
-}
-[ ! -f ${SET_BEE_PATH}/xswarm.conf ] && GenXswarmConf
-
 SendMSG()
 {
     if [ ! -z $1 ]; then
