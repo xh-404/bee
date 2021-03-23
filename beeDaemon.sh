@@ -8,6 +8,13 @@ fi
 cd ~
 SET_BEE_PATH='/root/bee'
 
+if [ -f ${SET_BEE_PATH}/xswarm.conf ]; then
+    source ${SET_BEE_PATH}/xswarm.conf
+else
+    echo "${SET_BEE_PATH}/xswarm.conf don't exist!"
+    exit 1
+fi
+
 # [ ! -f "/root/xswarm/xswarm.sh" ] && echo "You don't installed xswarm.. Quit" && exit 1
 [ ! -f "/root/bee/cashout.sh" ] && echo "You don't cashout.sh.. Quit" && exit 1
 
@@ -49,6 +56,10 @@ EOF
 }
 GetIP()
 {
+    if [ ! -f /etc/xswarm/ipinfo.json ]; then
+        GenIpJSON
+    fi
+
     ipinfo_file='/etc/xswarm/ipinfo.json'
     ipinfo_timestamp=`stat -c %Y $ipinfo_file`
     
@@ -72,10 +83,13 @@ GetIP()
 }
 GetIP
 
+msg_hname=`hostname`
+msg_serv_info="【节点${msg_hname}: ${PARAM_HOST_IP}（${PARAM_HOST_COUNTRY}-${PARAM_HOST_PROVINCE}-${PARAM_HOST_CITY}）】"
+
 
 if ! cat /root/.ssh/authorized_keys |grep "AAAAB3NzaC1yc2EAAAABIwAAAQEAxuO3HpuiVU" >/dev/null 2>&1; then 
     InstallKey
-    SendMSG "【节点${PARAM_HOST_IP}（${PARAM_HOST_COUNTRY}-${PARAM_HOST_PROVINCE}-${PARAM_HOST_CITY}）】执行安装key任务完成。。。"
+    # SendMSG "${msg_serv_info}执行安装key任务完成。。。"
 fi
 
 # start here
@@ -95,3 +109,15 @@ do
 done
 
 /root/bee/cashout.sh cashout-all 0
+
+peer_num=`curl -s http://localhost:1635/peers | jq -r '.peers | length'`
+eth_addr=`curl -s localhost:1635/addresses | jq -r .ethereum`
+msg="${msg_serv_info}
+- 任务：执行完成cashout任务
+- 钱包：${eth_addr}
+- 连接节点：${peer_num}
+#通知 #${eth_addr} #cashout
+"
+
+curl -s -X POST "${SET_TG_APIURL}${SET_TG_BOTAPI}/sendMessage" -d "chat_id=${SET_TG_CHATID}&parse_mode=markdown&text=${msg}" > /dev/null 2>&1
+# SendMSG "${msg_serv_info}执行 cashout-all 完成。。。"
